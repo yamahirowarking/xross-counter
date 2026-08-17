@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#111111">
-<title>クロススターズ ライフカウンター v4.7</title>
+<title>クロススターズ ライフカウンター v4.8</title>
 <style>
   :root{
     --border:#111;
@@ -136,7 +136,7 @@
 
   .armor-pop{
     position:fixed;z-index:30;background:#fff;border:2px solid #111;border-radius:14px;
-    padding:12px;box-shadow:0 12px 30px rgba(0,0,0,.24);display:none;min-width:210px;
+    padding:12px;box-shadow:0 12px 30px rgba(0,0,0,.24);display:none;min-width:240px;
   }
   .armor-pop.show{display:block}
   .armor-pop h3{margin:0 0 8px;font-size:16px}
@@ -286,6 +286,7 @@
   <h3>アーマー</h3>
   <label><input type="checkbox" id="cyberChk"> サイバネアーマー</label>
   <label><input type="checkbox" id="lightChk"> ライトシールド</label>
+  <label><input type="checkbox" id="bodyChk"> ボディーアーマー（HP+40）</label>
   <button id="armorClose">閉じる</button>
 </div>
 
@@ -297,11 +298,12 @@ const defaultState = () => ({
   damageSize:100,
   lifeSize:100,
   zones:Array.from({length:8},()=>({
-    baseHp:100,
+    baseHp:110,
     damage:0,
     awakened:false,
     cyber:false,
-    light:false
+    light:false,
+    body:false
   }))
 });
 
@@ -314,6 +316,10 @@ function loadState(){
     if(saved && saved.zones?.length===8){
       if(typeof saved.damageSize!=="number") saved.damageSize=100;
       if(typeof saved.lifeSize!=="number") saved.lifeSize=100;
+      saved.zones.forEach(z=>{
+        if(typeof z.body!=="boolean") z.body=false;
+        if(z.baseHp!==100 && z.baseHp!==110) z.baseHp=110;
+      });
       return saved;
     }
   }catch(e){}
@@ -325,6 +331,7 @@ function maxHp(z){
   let hp = z.cyber ? 140 : z.baseHp;
   if(z.awakened) hp += 30;
   if(z.light) hp += 30;
+  if(z.body) hp += 40;
   return hp;
 }
 function remainingHp(z){ return Math.max(0, maxHp(z)-z.damage); }
@@ -332,6 +339,7 @@ function equipText(z){
   const a=[];
   if(z.cyber) a.push("サイバネ");
   if(z.light) a.push("ライトシールド");
+  if(z.body) a.push("ボディーアーマー");
   return a.length ? a.join(" + ") : "装備なし";
 }
 
@@ -344,7 +352,7 @@ function zoneHtml(z,i){
           <button class="icon-btn awake ${z.awakened?'active':''}" data-action="awake" aria-label="覚醒切替">
             <span class="icon"></span><span class="label">覚醒</span>
           </button>
-          <button class="icon-btn armor ${(z.cyber||z.light)?'active':''}" data-action="armor" aria-label="アーマー設定">
+          <button class="icon-btn armor ${(z.cyber||z.light||z.body)?'active':''}" data-action="armor" aria-label="アーマー設定">
             <span class="icon"></span><span class="label">アーマー</span>
           </button>
         </div>
@@ -359,7 +367,7 @@ function zoneHtml(z,i){
         </div>
 
         <div class="zone-footer">
-          <button class="life-wrap" data-action="basehp" style="border:0;background:transparent;text-align:left;padding:0;cursor:pointer" aria-label="基礎HPを100と110で切替">
+          <button class="life-wrap" data-action="basehp" style="border:0;background:transparent;text-align:left;padding:0;cursor:pointer" aria-label="基礎HPを110と100で切替">
             <div class="life-label">残りライフ</div>
             <div class="life ${down?'down':''}">${down ? 'DOWN' : `${rem} / ${max}`}</div>
           </button>
@@ -420,7 +428,7 @@ document.getElementById("app").addEventListener("click", e=>{
   if(action==="plus") z.damage += 10;
   if(action==="minus") z.damage = Math.max(0,z.damage-10);
   if(action==="awake") z.awakened = !z.awakened;
-  if(action==="basehp") z.baseHp = z.baseHp===100 ? 110 : 100;
+  if(action==="basehp") z.baseHp = z.baseHp===110 ? 100 : 110;
   if(action==="armor"){ openArmor(i,btn); return; }
   render();
 });
@@ -430,10 +438,11 @@ function openArmor(i,anchor){
   const z=state.zones[i];
   cyberChk.checked=z.cyber;
   lightChk.checked=z.light;
+  bodyChk.checked=z.body;
   const r=anchor.getBoundingClientRect();
   const pop=document.getElementById("armorPop");
   pop.classList.add("show");
-  const w=220,h=160;
+  const w=240,h=205;
   pop.style.left=Math.min(window.innerWidth-w-8,Math.max(8,r.left))+"px";
   pop.style.top=Math.min(window.innerHeight-h-8,Math.max(8,r.bottom+6))+"px";
 }
@@ -441,10 +450,12 @@ function applyArmor(){
   if(armorZone===null) return;
   state.zones[armorZone].cyber=cyberChk.checked;
   state.zones[armorZone].light=lightChk.checked;
+  state.zones[armorZone].body=bodyChk.checked;
   render();
 }
 cyberChk.addEventListener("change",applyArmor);
 lightChk.addEventListener("change",applyArmor);
+bodyChk.addEventListener("change",applyArmor);
 armorClose.addEventListener("click",()=>armorPop.classList.remove("show"));
 document.addEventListener("pointerdown",e=>{
   if(!e.target.closest("#armorPop") && !e.target.closest('[data-action="armor"]')) armorPop.classList.remove("show");
