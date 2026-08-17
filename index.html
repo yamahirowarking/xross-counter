@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#111111">
-<title>クロススターズ ライフカウンター v4.4</title>
+<title>クロススターズ ライフカウンター v4.7</title>
 <style>
   :root{
     --border:#111;
@@ -73,7 +73,7 @@
     font-size:clamp(28px,5vw,54px);cursor:pointer;padding:0;
   }
   .damage-center{text-align:center;align-self:center}
-  .damage{font-size:clamp(44px,calc(9vh * var(--damage-scale)),calc(108px * var(--damage-scale)));line-height:.86;font-weight:600}
+  .damage{font-size:var(--damage-font-px,60px);line-height:.86;font-weight:600}
   .damage-label{margin-top:clamp(2px,.8vh,8px);font-size:clamp(10px,1.2vw,18px);font-weight:700}
   .zone-footer{
     display:flex;align-items:end;justify-content:space-between;gap:4px;min-width:0;
@@ -81,8 +81,8 @@
   }
   .life-wrap{min-width:0}
   .life-label{font-size:.82em}
-  .life{font-size:clamp(44px,calc(9vh * var(--life-scale)),calc(108px * var(--life-scale)));line-height:.86;font-weight:800;white-space:nowrap}
-  .life.down{color:#d71919;font-size:clamp(34px,7vh,76px);line-height:.9;font-weight:900}
+  .life{font-size:var(--life-font-px,44px);line-height:.9;font-weight:800;white-space:nowrap}
+  .life.down{color:#d71919;font-size:clamp(28px,5.8vh,62px);line-height:.9;font-weight:900}
   .equip{
     max-width:50%;padding:clamp(4px,.7vh,7px) clamp(3px,.5vw,8px);
     border:1.5px solid #3158bd;border-radius:8px;
@@ -147,11 +147,9 @@
     .zone{padding:3px 5px}
     .icon-btn{min-height:34px}
     .icon{width:22px;height:22px}
-    .damage{font-size:clamp(40px,calc(12vh * var(--damage-scale)),calc(70px * var(--damage-scale)))}
     .damage-label{margin-top:1px;font-size:10px}
     .zone-footer{font-size:9px}
-    .life{font-size:clamp(40px,calc(12vh * var(--life-scale)),calc(70px * var(--life-scale)))}
-    .life.down{font-size:clamp(32px,9vh,56px)}
+    .life.down{font-size:clamp(26px,7vh,46px)}
     .equip{font-size:8px;padding:3px}
   }
 
@@ -268,7 +266,7 @@
         <input id="lifeSize" type="range" min="60" max="150" step="5" value="100">
         <span class="option-value" id="lifeSizeValue">100%</span>
       </div>
-      <div class="option-note">100%はv4.1の表示サイズです。端末ごとに見やすい大きさへ調整でき、設定はこのブラウザに保存されます。</div>
+      <div class="option-note">100%を基準サイズとして、ダメージとライフを個別に調整できます。ライフの基準サイズは小さめに設定しています。設定はこのブラウザに保存されます。</div>
       <div class="option-actions">
         <button id="sizeDefaultBtn">100%に戻す</button>
         <button id="optionsCloseBtn">設定を閉じる</button>
@@ -371,9 +369,28 @@ function zoneHtml(z,i){
     </article>`;
 }
 
+function clampNumber(v,min,max){ return Math.min(max,Math.max(min,v)); }
+
+function applyTextSizes(){
+  const h = window.innerHeight;
+  const isShortLandscape = window.matchMedia("(orientation: landscape) and (max-height: 500px)").matches;
+
+  // 100% baseline sizes. Percentage is applied AFTER clamping, so values below
+  // 80% continue to shrink instead of getting stuck at clamp()'s minimum.
+  const damageBase = isShortLandscape
+    ? clampNumber(h * 0.12, 40, 70)
+    : clampNumber(h * 0.09, 44, 108);
+
+  const lifeBase = isShortLandscape
+    ? clampNumber(h * 0.085, 28, 52)
+    : clampNumber(h * 0.067, 32, 80);
+
+  document.documentElement.style.setProperty("--damage-font-px", (damageBase * state.damageSize / 100) + "px");
+  document.documentElement.style.setProperty("--life-font-px", (lifeBase * state.lifeSize / 100) + "px");
+}
+
 function render(){
-  document.documentElement.style.setProperty("--damage-scale", state.damageSize/100);
-  document.documentElement.style.setProperty("--life-scale", state.lifeSize/100);
+  applyTextSizes();
   const damageSlider=document.getElementById("damageSize");
   const lifeSlider=document.getElementById("lifeSize");
   if(damageSlider){
@@ -490,14 +507,16 @@ optionsCloseBtn.addEventListener("click",()=>optionsPanel.classList.remove("show
 function updateTextSizes(){
   state.damageSize=Number(damageSize.value);
   state.lifeSize=Number(lifeSize.value);
-  document.documentElement.style.setProperty("--damage-scale", state.damageSize/100);
-  document.documentElement.style.setProperty("--life-scale", state.lifeSize/100);
+  applyTextSizes();
   damageSizeValue.textContent=state.damageSize+"%";
   lifeSizeValue.textContent=state.lifeSize+"%";
   saveState();
 }
 damageSize.addEventListener("input",updateTextSizes);
 lifeSize.addEventListener("input",updateTextSizes);
+
+window.addEventListener("resize", applyTextSizes);
+window.addEventListener("orientationchange", ()=>setTimeout(applyTextSizes,100));
 
 sizeDefaultBtn.addEventListener("click",()=>{
   damageSize.value=100;
