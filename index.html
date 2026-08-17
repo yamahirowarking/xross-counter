@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#111111">
-<title>クロススターズ ライフカウンター v4</title>
+<title>クロススターズ ライフカウンター v4.3</title>
 <style>
   :root{
     --border:#111;
@@ -12,6 +12,8 @@
     --blue:#3b6ee8;
     --bg:#fff;
     --muted:#666;
+    --damage-scale:1;
+    --life-scale:1;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{
@@ -59,7 +61,7 @@
     background:var(--red);border:clamp(2px,.3vw,4px) solid #111;
     display:block;
   }
-  .awake .icon{clip-path:polygon(50% 0,92% 24%,92% 76%,50% 100%,8% 76%,8% 24%)}
+  .awake .icon{clip-path:polygon(50% 0,92% 24%,92% 76%,50% 100%,8% 76%,8% 24%);background:#ffd928}
   .armor .icon{clip-path:polygon(18% 0,82% 0,100% 70%,50% 100%,0 70%)}
   .icon-btn.active .icon{filter:drop-shadow(0 0 4px rgba(255,0,0,.55))}
   .icon-btn.active .label{color:#d71919}
@@ -71,7 +73,7 @@
     font-size:clamp(28px,5vw,54px);cursor:pointer;padding:0;
   }
   .damage-center{text-align:center;align-self:center}
-  .damage{font-size:clamp(44px,9vh,108px);line-height:.86;font-weight:600}
+  .damage{font-size:clamp(44px,calc(9vh * var(--damage-scale)),calc(108px * var(--damage-scale)));line-height:.86;font-weight:600}
   .damage-label{margin-top:clamp(2px,.8vh,8px);font-size:clamp(10px,1.2vw,18px);font-weight:700}
   .zone-footer{
     display:flex;align-items:end;justify-content:space-between;gap:4px;min-width:0;
@@ -79,8 +81,8 @@
   }
   .life-wrap{min-width:0}
   .life-label{font-size:.82em}
-  .life{font-size:clamp(20px,2.7vw,38px);line-height:1;font-weight:800;white-space:nowrap}
-  .life.down{color:#d71919;font-size:clamp(26px,3vw,44px);font-weight:900}
+  .life{font-size:clamp(44px,calc(9vh * var(--life-scale)),calc(108px * var(--life-scale)));line-height:.86;font-weight:800;white-space:nowrap}
+  .life.down{color:#d71919;font-size:clamp(34px,7vh,76px);line-height:.9;font-weight:900}
   .equip{
     max-width:50%;padding:clamp(4px,.7vh,7px) clamp(3px,.5vw,8px);
     border:1.5px solid #3158bd;border-radius:8px;
@@ -110,6 +112,23 @@
   .confirm-actions{display:flex;gap:8px;margin-top:10px}
   .confirm-actions button{flex:1;min-height:48px}
   .danger{background:#d71919!important}.cancel{background:#777!important}
+  .options{
+    display:none;margin-top:12px;padding:12px;background:#f6f6f6;
+    border:1px solid #ccc;border-radius:10px;
+  }
+  .options.show{display:block}
+  .option-row{
+    display:grid;grid-template-columns:110px 1fr 54px;gap:10px;
+    align-items:center;margin:10px 0;font-weight:700;
+  }
+  .option-row input[type="range"]{width:100%}
+  .option-value{text-align:right;font-variant-numeric:tabular-nums}
+  .option-note{font-size:12px;color:#666;margin-top:6px}
+  .option-actions{display:flex;gap:8px;margin-top:10px}
+  .option-actions button{
+    flex:1;min-height:42px!important;background:#555!important;
+  }
+
   .armor-pop{
     position:fixed;z-index:30;background:#fff;border:2px solid #111;border-radius:14px;
     padding:12px;box-shadow:0 12px 30px rgba(0,0,0,.24);display:none;min-width:210px;
@@ -123,11 +142,11 @@
     .zone{padding:3px 5px}
     .icon-btn{min-height:34px}
     .icon{width:22px;height:22px}
-    .damage{font-size:clamp(40px,12vh,70px)}
+    .damage{font-size:clamp(40px,calc(12vh * var(--damage-scale)),calc(70px * var(--damage-scale)))}
     .damage-label{margin-top:1px;font-size:10px}
     .zone-footer{font-size:9px}
-    .life{font-size:clamp(18px,4.2vh,25px)}
-    .life.down{font-size:clamp(22px,4.8vh,30px)}
+    .life{font-size:clamp(40px,calc(12vh * var(--life-scale)),calc(70px * var(--life-scale)))}
+    .life.down{font-size:clamp(32px,9vh,56px)}
     .equip{font-size:8px;padding:3px}
   }
 
@@ -166,7 +185,25 @@
       <button class="next" id="nextBtn">NEXT ROUND<small>ダメージのみ0／覚醒・装備は維持</small></button>
       <button class="reset" id="resetBtn">RESET<small>ダメージ・覚醒・装備を初期化</small></button>
       <button class="flip-btn" id="flipBtn">上半分 反転：OFF<small>対面プレイ向け</small></button>
+      <button class="close" id="optionsBtn">文字サイズ設定<small>ダメージ・ライフを個別調整</small></button>
       <button class="close" id="closeBtn">閉じる</button>
+    </div>
+    <div class="options" id="optionsPanel">
+      <div class="option-row">
+        <label for="damageSize">ダメージ</label>
+        <input id="damageSize" type="range" min="60" max="150" step="5" value="100">
+        <span class="option-value" id="damageSizeValue">100%</span>
+      </div>
+      <div class="option-row">
+        <label for="lifeSize">ライフ</label>
+        <input id="lifeSize" type="range" min="60" max="150" step="5" value="100">
+        <span class="option-value" id="lifeSizeValue">100%</span>
+      </div>
+      <div class="option-note">100%はv4.1の表示サイズです。端末ごとに見やすい大きさへ調整でき、設定はこのブラウザに保存されます。</div>
+      <div class="option-actions">
+        <button id="sizeDefaultBtn">100%に戻す</button>
+        <button id="optionsCloseBtn">設定を閉じる</button>
+      </div>
     </div>
     <div class="confirm" id="resetConfirm">
       本当に全8面をリセットしますか？
@@ -190,6 +227,8 @@ const STORAGE_KEY = "crossstars-life-counter-v1";
 
 const defaultState = () => ({
   flipTop:false,
+  damageSize:100,
+  lifeSize:100,
   zones:Array.from({length:8},()=>({
     baseHp:100,
     damage:0,
@@ -205,7 +244,11 @@ let armorZone = null;
 function loadState(){
   try{
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if(saved && saved.zones?.length===8) return saved;
+    if(saved && saved.zones?.length===8){
+      if(typeof saved.damageSize!=="number") saved.damageSize=100;
+      if(typeof saved.lifeSize!=="number") saved.lifeSize=100;
+      return saved;
+    }
   }catch(e){}
   return defaultState();
 }
@@ -260,6 +303,18 @@ function zoneHtml(z,i){
 }
 
 function render(){
+  document.documentElement.style.setProperty("--damage-scale", state.damageSize/100);
+  document.documentElement.style.setProperty("--life-scale", state.lifeSize/100);
+  const damageSlider=document.getElementById("damageSize");
+  const lifeSlider=document.getElementById("lifeSize");
+  if(damageSlider){
+    damageSlider.value=state.damageSize;
+    document.getElementById("damageSizeValue").textContent=state.damageSize+"%";
+  }
+  if(lifeSlider){
+    lifeSlider.value=state.lifeSize;
+    document.getElementById("lifeSizeValue").textContent=state.lifeSize+"%";
+  }
   document.getElementById("topRow").innerHTML = state.zones.slice(0,4).map((z,i)=>zoneHtml(z,i)).join("");
   document.getElementById("bottomRow").innerHTML = state.zones.slice(4).map((z,i)=>zoneHtml(z,i+4)).join("");
   document.getElementById("topRow").classList.toggle("flip", state.flipTop);
@@ -343,19 +398,53 @@ resetBtn.addEventListener("click",()=>confirmBox.classList.add("show"));
 resetNo.addEventListener("click",()=>confirmBox.classList.remove("show"));
 resetYes.addEventListener("click",()=>{
   const flip=state.flipTop;
+  const damageSize=state.damageSize;
+  const lifeSize=state.lifeSize;
   state=defaultState();
   state.flipTop=flip;
+  state.damageSize=damageSize;
+  state.lifeSize=lifeSize;
   confirmBox.classList.remove("show");
   overlay.classList.remove("show");
   render();
 });
+const optionsPanel=document.getElementById("optionsPanel");
+const damageSize=document.getElementById("damageSize");
+const lifeSize=document.getElementById("lifeSize");
+
+optionsBtn.addEventListener("click",()=>{
+  resetConfirm.classList.remove("show");
+  optionsPanel.classList.toggle("show");
+});
+optionsCloseBtn.addEventListener("click",()=>optionsPanel.classList.remove("show"));
+
+function updateTextSizes(){
+  state.damageSize=Number(damageSize.value);
+  state.lifeSize=Number(lifeSize.value);
+  document.documentElement.style.setProperty("--damage-scale", state.damageSize/100);
+  document.documentElement.style.setProperty("--life-scale", state.lifeSize/100);
+  damageSizeValue.textContent=state.damageSize+"%";
+  lifeSizeValue.textContent=state.lifeSize+"%";
+  saveState();
+}
+damageSize.addEventListener("input",updateTextSizes);
+lifeSize.addEventListener("input",updateTextSizes);
+
+sizeDefaultBtn.addEventListener("click",()=>{
+  damageSize.value=100;
+  lifeSize.value=100;
+  updateTextSizes();
+});
+
 closeBtn.addEventListener("click",()=>{
   confirmBox.classList.remove("show");
+  optionsPanel.classList.remove("show");
   overlay.classList.remove("show");
 });
 overlay.addEventListener("click",e=>{
   if(e.target===overlay){
     confirmBox.classList.remove("show");
+    optionsPanel.classList.remove("show");
     overlay.classList.remove("show");
   }
 });
