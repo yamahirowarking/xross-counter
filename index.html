@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#111111">
-<title>クロススターズ ライフカウンター v4.8.1</title>
+<title>クロススターズ ライフカウンター v4.8.2</title>
 <style>
   :root{
     --border:#111;
@@ -79,7 +79,7 @@
     display:flex;align-items:end;justify-content:space-between;gap:4px;min-width:0;
     font-size:clamp(10px,1.05vw,16px);font-weight:700;background:transparent;
   }
-  .life-wrap{min-width:0}
+  .life-wrap{min-width:0;flex:1}
   .life-label{font-size:.82em}
   .life{font-size:var(--life-font-px,44px);line-height:.9;font-weight:800;white-space:nowrap}
   .life.down{color:#d71919;font-size:clamp(28px,5.8vh,62px);line-height:.9;font-weight:900}
@@ -88,6 +88,16 @@
     border:1.5px solid #3158bd;border-radius:8px;
     color:#244aa7;background:#fff;font-size:clamp(8px,.9vw,14px);font-weight:700;
     line-height:1.05;text-align:center;cursor:pointer;overflow-wrap:anywhere;
+  }
+  .equip-top{
+    width:clamp(74px,9vw,126px);
+    max-width:56%;
+    min-height:clamp(38px,7vh,54px);
+    align-self:start;
+  }
+  .equip-top.active{
+    background:#eef3ff;
+    border-width:2px;
   }
 
   .overlay{
@@ -151,6 +161,7 @@
     .zone-footer{font-size:9px}
     .life.down{font-size:clamp(26px,7vh,46px)}
     .equip{font-size:8px;padding:3px}
+    .equip-top{width:72px;max-width:58%;min-height:34px}
   }
 
   @media (max-height:500px) and (orientation:landscape){
@@ -352,8 +363,8 @@ function zoneHtml(z,i){
           <button class="icon-btn awake ${z.awakened?'active':''}" data-action="awake" aria-label="覚醒切替">
             <span class="icon"></span><span class="label">覚醒</span>
           </button>
-          <button class="icon-btn armor ${(z.cyber||z.light||z.body)?'active':''}" data-action="armor" aria-label="アーマー設定">
-            <span class="icon"></span><span class="label">アーマー</span>
+          <button class="equip equip-top ${(z.cyber||z.light||z.body)?'active':''}" data-action="armor" aria-label="装備設定">
+            ${equipText(z)}
           </button>
         </div>
 
@@ -367,11 +378,10 @@ function zoneHtml(z,i){
         </div>
 
         <div class="zone-footer">
-          <button class="life-wrap" data-action="basehp" style="border:0;background:transparent;text-align:left;padding:0;cursor:pointer" aria-label="基礎HPを110と100で切替">
+          <button class="life-wrap" data-action="basehp" style="border:0;background:transparent;text-align:left;padding:0;cursor:pointer;width:100%" aria-label="基礎HPを110と100で切替">
             <div class="life-label">残りライフ</div>
             <div class="life ${down?'down':''}">${down ? 'DOWN' : `${rem} / ${max}`}</div>
           </button>
-          <button class="equip" data-action="armor">${equipText(z)}</button>
         </div>
       </div>
     </article>`;
