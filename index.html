@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#111111">
-<title>クロススターズ ライフカウンター</title>
+<title>クロススターズ ライフカウンター v4</title>
 <style>
   :root{
     --border:#111;
@@ -42,12 +42,12 @@
     overflow:hidden;
   }
   .zone:last-child{border-right:0}
-  .zone.awakened{background:#fff6bf}
-  .zone.down{background:#ffd7d7}
-  .zone.awakened.down{background:#ffd7d7}
-  .zone-inner{width:100%;height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0;min-width:0;overflow:hidden}
+  .zone-inner{width:100%;height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) minmax(54px,auto);min-height:0;min-width:0;overflow:hidden}
   .row.top.flip .zone-inner{transform:rotate(180deg)}
-  .zone-header{display:flex;justify-content:space-between;gap:8px}
+  .zone.awakened-bg{background:#fff8cc}
+  .zone.down-bg{background:#ffd9d9}
+  .zone.awakened-bg.down-bg{background:#ffd0d0}
+  .zone-header{display:flex;justify-content:space-between;gap:8px;background:transparent}
   .icon-btn{
     width:clamp(44px,5vw,72px);min-height:clamp(38px,7vh,54px);
     border:0;background:transparent;padding:0;
@@ -71,20 +71,20 @@
     font-size:clamp(28px,5vw,54px);cursor:pointer;padding:0;
   }
   .damage-center{text-align:center;align-self:center}
-  .damage{font-size:clamp(48px,10vh,112px);line-height:.86;font-weight:600}
+  .damage{font-size:clamp(44px,9vh,108px);line-height:.86;font-weight:600}
   .damage-label{margin-top:clamp(2px,.8vh,8px);font-size:clamp(10px,1.2vw,18px);font-weight:700}
   .zone-footer{
     display:flex;align-items:end;justify-content:space-between;gap:4px;min-width:0;
-    font-size:clamp(9px,1vw,16px);font-weight:700;
+    font-size:clamp(10px,1.05vw,16px);font-weight:700;background:transparent;
   }
   .life-wrap{min-width:0}
   .life-label{font-size:.82em}
-  .life{font-size:clamp(20px,2.6vw,38px);line-height:1;font-weight:800;white-space:nowrap}
-  .life.down{color:#e51f1f;font-size:clamp(26px,3vw,44px)}
+  .life{font-size:clamp(20px,2.7vw,38px);line-height:1;font-weight:800;white-space:nowrap}
+  .life.down{color:#d71919;font-size:clamp(26px,3vw,44px);font-weight:900}
   .equip{
     max-width:50%;padding:clamp(4px,.7vh,7px) clamp(3px,.5vw,8px);
     border:1.5px solid #3158bd;border-radius:8px;
-    color:#244aa7;background:rgba(255,255,255,.78);font-size:clamp(8px,.9vw,14px);font-weight:700;
+    color:#244aa7;background:#fff;font-size:clamp(8px,.9vw,14px);font-weight:700;
     line-height:1.05;text-align:center;cursor:pointer;overflow-wrap:anywhere;
   }
 
@@ -123,10 +123,11 @@
     .zone{padding:3px 5px}
     .icon-btn{min-height:34px}
     .icon{width:22px;height:22px}
-    .damage{font-size:clamp(44px,14vh,76px)}
+    .damage{font-size:clamp(40px,12vh,70px)}
     .damage-label{margin-top:1px;font-size:10px}
     .zone-footer{font-size:9px}
-    .life{font-size:clamp(17px,4.2vh,24px)}
+    .life{font-size:clamp(18px,4.2vh,25px)}
+    .life.down{font-size:clamp(22px,4.8vh,30px)}
     .equip{font-size:8px;padding:3px}
   }
 
@@ -227,7 +228,7 @@ function equipText(z){
 function zoneHtml(z,i){
   const rem=remainingHp(z), max=maxHp(z), down=rem<=0;
   return `
-    <article class="zone ${z.awakened?'awakened':''} ${down?'down':''}" data-zone="${i}">
+    <article class="zone ${z.awakened ? 'awakened-bg' : ''} ${down ? 'down-bg' : ''}" data-zone="${i}">
       <div class="zone-inner">
         <div class="zone-header">
           <button class="icon-btn awake ${z.awakened?'active':''}" data-action="awake" aria-label="覚醒切替">
