@@ -42,6 +42,9 @@
     overflow:hidden;
   }
   .zone:last-child{border-right:0}
+  .zone.awakened{background:#fff6bf}
+  .zone.down{background:#ffd7d7}
+  .zone.awakened.down{background:#ffd7d7}
   .zone-inner{width:100%;height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0;min-width:0;overflow:hidden}
   .row.top.flip .zone-inner{transform:rotate(180deg)}
   .zone-header{display:flex;justify-content:space-between;gap:8px}
@@ -68,7 +71,7 @@
     font-size:clamp(28px,5vw,54px);cursor:pointer;padding:0;
   }
   .damage-center{text-align:center;align-self:center}
-  .damage{font-size:clamp(38px,7.5vh,92px);line-height:.88;font-weight:500}
+  .damage{font-size:clamp(48px,10vh,112px);line-height:.86;font-weight:600}
   .damage-label{margin-top:clamp(2px,.8vh,8px);font-size:clamp(10px,1.2vw,18px);font-weight:700}
   .zone-footer{
     display:flex;align-items:end;justify-content:space-between;gap:4px;min-width:0;
@@ -76,12 +79,12 @@
   }
   .life-wrap{min-width:0}
   .life-label{font-size:.82em}
-  .life{font-size:clamp(14px,2vw,28px);white-space:nowrap}
-  .life.down{color:#e51f1f;font-size:clamp(22px,2.7vw,40px)}
+  .life{font-size:clamp(20px,2.6vw,38px);line-height:1;font-weight:800;white-space:nowrap}
+  .life.down{color:#e51f1f;font-size:clamp(26px,3vw,44px)}
   .equip{
     max-width:50%;padding:clamp(4px,.7vh,7px) clamp(3px,.5vw,8px);
     border:1.5px solid #3158bd;border-radius:8px;
-    color:#244aa7;background:#fff;font-size:clamp(8px,.9vw,14px);font-weight:700;
+    color:#244aa7;background:rgba(255,255,255,.78);font-size:clamp(8px,.9vw,14px);font-weight:700;
     line-height:1.05;text-align:center;cursor:pointer;overflow-wrap:anywhere;
   }
 
@@ -120,10 +123,10 @@
     .zone{padding:3px 5px}
     .icon-btn{min-height:34px}
     .icon{width:22px;height:22px}
-    .damage{font-size:clamp(34px,10vh,58px)}
+    .damage{font-size:clamp(44px,14vh,76px)}
     .damage-label{margin-top:1px;font-size:10px}
     .zone-footer{font-size:9px}
-    .life{font-size:14px}
+    .life{font-size:clamp(17px,4.2vh,24px)}
     .equip{font-size:8px;padding:3px}
   }
 
@@ -224,7 +227,7 @@ function equipText(z){
 function zoneHtml(z,i){
   const rem=remainingHp(z), max=maxHp(z), down=rem<=0;
   return `
-    <article class="zone" data-zone="${i}">
+    <article class="zone ${z.awakened?'awakened':''} ${down?'down':''}" data-zone="${i}">
       <div class="zone-inner">
         <div class="zone-header">
           <button class="icon-btn awake ${z.awakened?'active':''}" data-action="awake" aria-label="覚醒切替">
