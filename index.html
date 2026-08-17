@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#111111">
-<title>クロススターズ ライフカウンター v4.8.2</title>
+<title>クロススターズ ライフカウンター v4.9</title>
 <style>
   :root{
     --border:#111;
@@ -16,6 +16,16 @@
     --life-scale:1;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+  /* スマホ/Discord内ブラウザで長押しが文字選択やコールアウトと競合しないようにする */
+  #app,
+  #app *,
+  .overlay,
+  .overlay *{
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
+  }
   html,body{
     margin:0;width:100%;height:100%;background:#111;
     font-family:system-ui,-apple-system,"Segoe UI","Noto Sans JP",sans-serif;
@@ -233,24 +243,60 @@
     .menu button{min-height:52px}
   }
 
-  #portraitNotice{
-    display:none;position:fixed;inset:0;z-index:100;background:#111;color:#fff;
-    align-items:center;justify-content:center;text-align:center;padding:24px;
-    font-size:18px;font-weight:700;
-  }
-  #portraitNotice small{display:block;margin-top:10px;font-size:13px;font-weight:500;color:#bbb}
+  /* 縦画面では盤面を90度回転し、横画面相当として表示する */
   @media (orientation:portrait){
-    #portraitNotice{display:flex}
-    #app{visibility:hidden}
+    body{
+      overflow:hidden;
+      background:#111;
+    }
+
+    #app{
+      visibility:visible;
+      position:fixed;
+      width:100vh;
+      width:100svh;
+      height:100vw;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%) rotate(90deg);
+      transform-origin:center center;
+    }
+
+    .overlay{
+      inset:auto;
+      left:50%;
+      top:50%;
+      width:100vh;
+      width:100svh;
+      height:100vw;
+      transform:translate(-50%,-50%) rotate(90deg);
+      transform-origin:center center;
+    }
+
+    /* 回転後の短辺にメニュー高さを合わせ、確認欄が画面外へ埋もれないようにする */
+    .menu{
+      max-height:calc(100vw - 12px);
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    .confirm.show{
+      position:sticky;
+      bottom:0;
+      z-index:2;
+      box-shadow:0 -6px 16px rgba(0,0,0,.12);
+    }
+
+    .armor-pop.show{
+      left:50%!important;
+      top:50%!important;
+      transform:translate(-50%,-50%) rotate(90deg);
+      transform-origin:center center;
+    }
   }
 </style>
 </head>
 <body>
-<div id="portraitNotice">
-  <div>スマホを横向きにしてください
-    <small>このカウンターは横画面専用です</small>
-  </div>
-</div>
 <main id="app" aria-label="クロススターズ ライフカウンター">
   <section class="row top" id="topRow"></section>
   <section class="row bottom" id="bottomRow"></section>
@@ -390,8 +436,11 @@ function zoneHtml(z,i){
 function clampNumber(v,min,max){ return Math.min(max,Math.max(min,v)); }
 
 function applyTextSizes(){
-  const h = window.innerHeight;
-  const isShortLandscape = window.matchMedia("(orientation: landscape) and (max-height: 500px)").matches;
+  const portraitBoard = window.matchMedia("(orientation: portrait)").matches;
+  const h = portraitBoard ? window.innerWidth : window.innerHeight;
+  const isShortLandscape = portraitBoard
+    ? window.innerWidth <= 500
+    : window.matchMedia("(orientation: landscape) and (max-height: 500px)").matches;
 
   // 100% baseline sizes. Percentage is applied AFTER clamping, so values below
   // 80% continue to shrink instead of getting stuck at clamp()'s minimum.
@@ -475,11 +524,20 @@ const overlay=document.getElementById("menuOverlay");
 const confirmBox=document.getElementById("resetConfirm");
 let holdTimer=null, startX=0, startY=0;
 
+document.getElementById("app").addEventListener("contextmenu", e=>{
+  e.preventDefault();
+});
+
+document.getElementById("app").addEventListener("selectstart", e=>{
+  e.preventDefault();
+});
+
 document.getElementById("app").addEventListener("pointerdown", e=>{
   if(e.target.closest("button")) return;
   startX=e.clientX; startY=e.clientY;
   holdTimer=setTimeout(()=>{
     navigator.vibrate?.(30);
+    document.body.classList.add("menu-open");
     overlay.classList.add("show");
   },650);
 });
@@ -495,6 +553,7 @@ document.getElementById("app").addEventListener("pointermove", e=>{
 nextBtn.addEventListener("click",()=>{
   state.zones.forEach(z=>z.damage=0);
   overlay.classList.remove("show");
+  document.body.classList.remove("menu-open");
   render();
 });
 flipBtn.addEventListener("click",()=>{
@@ -513,6 +572,7 @@ resetYes.addEventListener("click",()=>{
   state.lifeSize=lifeSize;
   confirmBox.classList.remove("show");
   overlay.classList.remove("show");
+  document.body.classList.remove("menu-open");
   render();
 });
 const optionsPanel=document.getElementById("optionsPanel");
@@ -549,12 +609,14 @@ closeBtn.addEventListener("click",()=>{
   confirmBox.classList.remove("show");
   optionsPanel.classList.remove("show");
   overlay.classList.remove("show");
+  document.body.classList.remove("menu-open");
 });
 overlay.addEventListener("click",e=>{
   if(e.target===overlay){
     confirmBox.classList.remove("show");
     optionsPanel.classList.remove("show");
     overlay.classList.remove("show");
+    document.body.classList.remove("menu-open");
   }
 });
 </script>
