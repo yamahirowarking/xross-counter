@@ -32,7 +32,7 @@
                data-zone="${index}">
         <div class="zone-bg-layer" style="opacity:${state.bgOpacity/100}">
           ${CrossCounter.BackgroundStorage.getCache()[index]
-            ? `<img src="${CrossCounter.BackgroundStorage.getCache()[index]}" alt="">`
+            ? `<img class="${state.flipTop && index<4 ? 'bg-rotated' : ''}" src="${CrossCounter.BackgroundStorage.getCache()[index]}" alt="">`
             : ""}
         </div>
         <div class="zone-state-layer"></div>
