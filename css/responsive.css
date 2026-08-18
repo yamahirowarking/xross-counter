@@ -1,0 +1,77 @@
+@media (max-height:500px) and (orientation:landscape){
+  .zone{padding:3px 5px}
+  .icon-btn{min-height:34px}
+  .icon{width:22px;height:22px}
+  .damage-label{margin-top:1px;font-size:10px}
+  .zone-footer{font-size:9px}
+  .life.down{font-size:clamp(26px,7vh,46px)}
+  .equip{font-size:8px;padding:3px}
+  .equip-top{width:72px;max-width:58%;min-height:34px}
+
+  .overlay{padding:6px}
+  .menu{
+    width:min(820px,98vw);max-height:calc(100svh - 12px);
+    padding:8px 10px;border-radius:12px;
+  }
+  .menu h2{margin:0 0 6px;font-size:15px}
+  .menu-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .menu button{min-height:40px;padding:5px 6px;font-size:11px;border-radius:8px}
+  .menu button small{margin-top:1px;font-size:8px;line-height:1.05}
+  .options,.backgrounds{margin-top:6px;padding:7px 9px;border-radius:8px}
+  .option-row,.bg-opacity-row{
+    grid-template-columns:72px 1fr 44px;gap:7px;margin:5px 0;font-size:11px;
+  }
+  .option-row input[type="range"],.bg-opacity-row input{
+    min-height:28px;touch-action:pan-x;
+  }
+  .option-note{font-size:9px;margin-top:3px;line-height:1.15}
+  .option-actions{margin-top:5px;gap:5px}
+  .option-actions button{min-height:34px!important}
+  .confirm{margin-top:6px;padding:7px;font-size:11px}
+  .confirm-actions{margin-top:5px}
+  .confirm-actions button{min-height:34px}
+
+  .bg-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+  .bg-slot{padding:4px}
+  .bg-slot-title{font-size:9px;margin-bottom:3px}
+  .bg-preview{height:30px;font-size:8px}
+  .bg-slot-actions{gap:2px;margin-top:3px}
+  .bg-slot-actions button{min-height:24px!important;font-size:8px!important}
+  .bg-tools{margin-top:5px;gap:4px}
+  .bg-tools button{min-height:30px!important;font-size:9px!important}
+  .bg-note{font-size:8px;margin-top:4px}
+}
+@media (max-width:760px) and (orientation:portrait){
+  .menu-grid{grid-template-columns:1fr}
+  .menu button{min-height:52px}
+}
+/* 縦画面は盤面を90度回転し、横画面相当として利用する */
+@media (orientation:portrait){
+  body{overflow:hidden;background:#111}
+  #app{
+    visibility:visible;position:fixed;
+    width:100vh;width:100svh;height:100vw;
+    left:50%;top:50%;
+    transform:translate(-50%,-50%) rotate(90deg);
+    transform-origin:center center;
+  }
+  .overlay{
+    inset:auto;left:50%;top:50%;
+    width:100vh;width:100svh;height:100vw;
+    transform:translate(-50%,-50%) rotate(90deg);
+    transform-origin:center center;
+  }
+  .menu{
+    max-height:calc(100vw - 12px);
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+  }
+  .confirm.show{
+    position:sticky;bottom:0;z-index:2;
+    box-shadow:0 -6px 16px rgba(0,0,0,.12);
+  }
+  .armor-pop.show{
+    left:50%!important;top:50%!important;
+    transform:translate(-50%,-50%) rotate(90deg);
+    transform-origin:center center;
+  }
+}

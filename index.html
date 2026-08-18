@@ -4,299 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#111111">
-<title>クロススターズ ライフカウンター v4.9</title>
-<style>
-  :root{
-    --border:#111;
-    --red:#ff2b2b;
-    --blue:#3b6ee8;
-    --bg:#fff;
-    --muted:#666;
-    --damage-scale:1;
-    --life-scale:1;
-  }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-
-  /* スマホ/Discord内ブラウザで長押しが文字選択やコールアウトと競合しないようにする */
-  #app,
-  #app *,
-  .overlay,
-  .overlay *{
-    -webkit-user-select:none;
-    user-select:none;
-    -webkit-touch-callout:none;
-  }
-  html,body{
-    margin:0;width:100%;height:100%;background:#111;
-    font-family:system-ui,-apple-system,"Segoe UI","Noto Sans JP",sans-serif;
-    overflow:hidden;
-    overscroll-behavior:none;
-  }
-  body{min-height:100vh;min-height:100svh}
-  button{font:inherit}
-  #app{
-    width:100vw;
-    height:100vh;
-    height:100svh;
-    background:var(--bg);
-    display:grid;
-    grid-template-rows:minmax(0,1fr) minmax(0,1fr);
-    touch-action:manipulation;
-    user-select:none;
-    overflow:hidden;
-  }
-  .row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));min-height:0;min-width:0;overflow:hidden}
-  .row.top{border-bottom:3px solid var(--border)}
-  .zone{
-    position:relative;min-width:0;min-height:0;padding:clamp(4px,1.2vh,10px) clamp(4px,.8vw,12px) clamp(4px,1vh,8px);
-    border-right:3px solid var(--border);
-    background:#fff;
-    overflow:hidden;
-  }
-  .zone:last-child{border-right:0}
-  .zone-inner{width:100%;height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) minmax(54px,auto);min-height:0;min-width:0;overflow:hidden}
-  .row.top.flip .zone-inner{transform:rotate(180deg)}
-  .zone.awakened-bg{background:#fff8cc}
-  .zone.down-bg{background:#ffd9d9}
-  .zone.awakened-bg.down-bg{background:#ffd0d0}
-  .zone-header{display:flex;justify-content:space-between;gap:8px;background:transparent}
-  .icon-btn{
-    width:clamp(44px,5vw,72px);min-height:clamp(38px,7vh,54px);
-    border:0;background:transparent;padding:0;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
-    font-weight:700;cursor:pointer;font-size:clamp(9px,1.2vw,16px);
-  }
-  .icon{
-    width:clamp(22px,3.1vw,34px);height:clamp(22px,3.1vw,34px);
-    background:var(--red);border:clamp(2px,.3vw,4px) solid #111;
-    display:block;
-  }
-  .awake .icon{clip-path:polygon(50% 0,92% 24%,92% 76%,50% 100%,8% 76%,8% 24%);background:#ffd928}
-  .armor .icon{clip-path:polygon(18% 0,82% 0,100% 70%,50% 100%,0 70%)}
-  .icon-btn.active .icon{filter:drop-shadow(0 0 4px rgba(255,0,0,.55))}
-  .icon-btn.active .label{color:#d71919}
-  .damage-area{
-    display:grid;grid-template-columns:1fr 1.5fr 1fr;align-items:center;min-height:0;
-  }
-  .damage-hit{
-    height:100%;min-width:0;border:0;background:transparent;
-    font-size:clamp(28px,5vw,54px);cursor:pointer;padding:0;
-  }
-  .damage-center{text-align:center;align-self:center}
-  .damage{font-size:var(--damage-font-px,60px);line-height:.86;font-weight:600}
-  .damage-label{margin-top:clamp(2px,.8vh,8px);font-size:clamp(10px,1.2vw,18px);font-weight:700}
-  .zone-footer{
-    display:flex;align-items:end;justify-content:space-between;gap:4px;min-width:0;
-    font-size:clamp(10px,1.05vw,16px);font-weight:700;background:transparent;
-  }
-  .life-wrap{min-width:0;flex:1}
-  .life-label{font-size:.82em}
-  .life{font-size:var(--life-font-px,44px);line-height:.9;font-weight:800;white-space:nowrap}
-  .life.down{color:#d71919;font-size:clamp(28px,5.8vh,62px);line-height:.9;font-weight:900}
-  .equip{
-    max-width:50%;padding:clamp(4px,.7vh,7px) clamp(3px,.5vw,8px);
-    border:1.5px solid #3158bd;border-radius:8px;
-    color:#244aa7;background:#fff;font-size:clamp(8px,.9vw,14px);font-weight:700;
-    line-height:1.05;text-align:center;cursor:pointer;overflow-wrap:anywhere;
-  }
-  .equip-top{
-    width:clamp(74px,9vw,126px);
-    max-width:56%;
-    min-height:clamp(38px,7vh,54px);
-    align-self:start;
-  }
-  .equip-top.active{
-    background:#eef3ff;
-    border-width:2px;
-  }
-
-  .overlay{
-    position:fixed;inset:0;background:rgba(0,0,0,.42);display:none;
-    align-items:center;justify-content:center;padding:20px;z-index:20;
-  }
-  .overlay.show{display:flex}
-  .menu{
-    width:min(760px,95vw);
-    max-height:calc(100svh - 16px);
-    background:#fff;border-radius:18px;padding:18px;
-    box-shadow:0 18px 60px rgba(0,0,0,.3);
-    overflow-y:auto;
-    overscroll-behavior:contain;
-    -webkit-overflow-scrolling:touch;
-  }
-  .menu h2{margin:0 0 14px;text-align:center;font-size:20px}
-  .menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-  .menu button{
-    min-height:72px;border:0;border-radius:12px;color:#fff;font-weight:800;cursor:pointer;
-    padding:10px;
-  }
-  .menu button small{display:block;font-weight:600;margin-top:3px}
-  .next{background:#3458d4}.reset{background:#e52c2c}.flip-btn{background:#333}.close{background:#777}
-  .confirm{display:none;margin-top:12px;padding:12px;background:#fff4f4;border:1px solid #e4a0a0;border-radius:10px}
-  .confirm.show{display:block}
-  .confirm-actions{display:flex;gap:8px;margin-top:10px}
-  .confirm-actions button{flex:1;min-height:48px}
-  .danger{background:#d71919!important}.cancel{background:#777!important}
-  .options{
-    display:none;margin-top:12px;padding:12px;background:#f6f6f6;
-    border:1px solid #ccc;border-radius:10px;
-  }
-  .options.show{display:block}
-  .option-row{
-    display:grid;grid-template-columns:110px 1fr 54px;gap:10px;
-    align-items:center;margin:10px 0;font-weight:700;
-  }
-  .option-row input[type="range"]{width:100%}
-  .option-value{text-align:right;font-variant-numeric:tabular-nums}
-  .option-note{font-size:12px;color:#666;margin-top:6px}
-  .option-actions{display:flex;gap:8px;margin-top:10px}
-  .option-actions button{
-    flex:1;min-height:42px!important;background:#555!important;
-  }
-
-  .armor-pop{
-    position:fixed;z-index:30;background:#fff;border:2px solid #111;border-radius:14px;
-    padding:12px;box-shadow:0 12px 30px rgba(0,0,0,.24);display:none;min-width:240px;
-  }
-  .armor-pop.show{display:block}
-  .armor-pop h3{margin:0 0 8px;font-size:16px}
-  .armor-pop label{display:flex;align-items:center;gap:8px;padding:7px 0;font-weight:700}
-  .armor-pop button{width:100%;margin-top:8px;padding:8px;border:0;border-radius:8px;background:#333;color:#fff;font-weight:700}
-
-  @media (max-height:500px) and (orientation:landscape){
-    .zone{padding:3px 5px}
-    .icon-btn{min-height:34px}
-    .icon{width:22px;height:22px}
-    .damage-label{margin-top:1px;font-size:10px}
-    .zone-footer{font-size:9px}
-    .life.down{font-size:clamp(26px,7vh,46px)}
-    .equip{font-size:8px;padding:3px}
-    .equip-top{width:72px;max-width:58%;min-height:34px}
-  }
-
-  @media (max-height:500px) and (orientation:landscape){
-    .overlay{padding:6px}
-    .menu{
-      width:min(820px,98vw);
-      max-height:calc(100svh - 12px);
-      padding:8px 10px;
-      border-radius:12px;
-    }
-    .menu h2{margin:0 0 6px;font-size:15px}
-    .menu-grid{
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:6px;
-    }
-    .menu button{
-      min-height:40px;
-      padding:5px 6px;
-      font-size:11px;
-      border-radius:8px;
-    }
-    .menu button small{
-      margin-top:1px;
-      font-size:8px;
-      line-height:1.05;
-    }
-    .options{
-      margin-top:6px;
-      padding:7px 9px;
-      border-radius:8px;
-    }
-    .option-row{
-      grid-template-columns:72px 1fr 44px;
-      gap:7px;
-      margin:5px 0;
-      font-size:11px;
-    }
-    .option-row input[type="range"]{
-      min-height:28px;
-      touch-action:pan-x;
-    }
-    .option-note{
-      font-size:9px;
-      margin-top:3px;
-      line-height:1.15;
-    }
-    .option-actions{
-      margin-top:5px;
-      gap:5px;
-    }
-    .option-actions button{
-      min-height:34px!important;
-    }
-    .confirm{
-      margin-top:6px;
-      padding:7px;
-      font-size:11px;
-    }
-    .confirm-actions{
-      margin-top:5px;
-    }
-    .confirm-actions button{
-      min-height:34px;
-    }
-  }
-
-  @media (max-width:760px) and (orientation:portrait){
-    .menu-grid{grid-template-columns:1fr}
-    .menu button{min-height:52px}
-  }
-
-  /* 縦画面では盤面を90度回転し、横画面相当として表示する */
-  @media (orientation:portrait){
-    body{
-      overflow:hidden;
-      background:#111;
-    }
-
-    #app{
-      visibility:visible;
-      position:fixed;
-      width:100vh;
-      width:100svh;
-      height:100vw;
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-50%) rotate(90deg);
-      transform-origin:center center;
-    }
-
-    .overlay{
-      inset:auto;
-      left:50%;
-      top:50%;
-      width:100vh;
-      width:100svh;
-      height:100vw;
-      transform:translate(-50%,-50%) rotate(90deg);
-      transform-origin:center center;
-    }
-
-    /* 回転後の短辺にメニュー高さを合わせ、確認欄が画面外へ埋もれないようにする */
-    .menu{
-      max-height:calc(100vw - 12px);
-      overflow-y:auto;
-      -webkit-overflow-scrolling:touch;
-    }
-
-    .confirm.show{
-      position:sticky;
-      bottom:0;
-      z-index:2;
-      box-shadow:0 -6px 16px rgba(0,0,0,.12);
-    }
-
-    .armor-pop.show{
-      left:50%!important;
-      top:50%!important;
-      transform:translate(-50%,-50%) rotate(90deg);
-      transform-origin:center center;
-    }
-  }
-</style>
+<title>クロススターズ ライフカウンター v5.1 LOCAL</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/board.css">
+<link rel="stylesheet" href="css/menu.css">
+<link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
+
 <main id="app" aria-label="クロススターズ ライフカウンター">
   <section class="row top" id="topRow"></section>
   <section class="row bottom" id="bottomRow"></section>
@@ -305,13 +20,16 @@
 <div class="overlay" id="menuOverlay">
   <div class="menu" role="dialog" aria-modal="true">
     <h2>ゲームメニュー</h2>
+
     <div class="menu-grid">
       <button class="next" id="nextBtn">NEXT ROUND<small>ダメージのみ0／覚醒・装備は維持</small></button>
       <button class="reset" id="resetBtn">RESET<small>ダメージ・覚醒・装備を初期化</small></button>
       <button class="flip-btn" id="flipBtn">上半分 反転：OFF<small>対面プレイ向け</small></button>
       <button class="close" id="optionsBtn">文字サイズ設定<small>ダメージ・ライフを個別調整</small></button>
+      <button class="close" id="backgroundBtn">背景画像設定<small>8面それぞれに画像を登録</small></button>
       <button class="close" id="closeBtn">閉じる</button>
     </div>
+
     <div class="options" id="optionsPanel">
       <div class="option-row">
         <label for="damageSize">ダメージ</label>
@@ -329,6 +47,23 @@
         <button id="optionsCloseBtn">設定を閉じる</button>
       </div>
     </div>
+
+    <div class="backgrounds" id="backgroundPanel">
+      <div class="bg-opacity-row">
+        <label for="bgOpacity">背景の濃さ</label>
+        <input id="bgOpacity" type="range" min="10" max="100" step="5" value="35">
+        <span class="option-value" id="bgOpacityValue">35%</span>
+      </div>
+      <div class="bg-grid" id="bgGrid"></div>
+      <div class="bg-tools">
+        <button id="bgExportBtn">背景設定を保存</button>
+        <button id="bgImportBtn">背景設定を読込</button>
+      </div>
+      <div class="bg-note">画像はこの端末のブラウザ内に保存されます。「背景設定を保存」で8面の画像と濃さを1ファイルに書き出せます。</div>
+      <input class="hidden-file" id="bgImageInput" type="file" accept="image/*">
+      <input class="hidden-file" id="bgImportInput" type="file" accept="application/json,.json">
+    </div>
+
     <div class="confirm" id="resetConfirm">
       本当に全8面をリセットしますか？
       <div class="confirm-actions">
@@ -347,278 +82,12 @@
   <button id="armorClose">閉じる</button>
 </div>
 
-<script>
-const STORAGE_KEY = "crossstars-life-counter-v1";
-
-const defaultState = () => ({
-  flipTop:false,
-  damageSize:100,
-  lifeSize:100,
-  zones:Array.from({length:8},()=>({
-    baseHp:110,
-    damage:0,
-    awakened:false,
-    cyber:false,
-    light:false,
-    body:false
-  }))
-});
-
-let state = loadState();
-let armorZone = null;
-
-function loadState(){
-  try{
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if(saved && saved.zones?.length===8){
-      if(typeof saved.damageSize!=="number") saved.damageSize=100;
-      if(typeof saved.lifeSize!=="number") saved.lifeSize=100;
-      saved.zones.forEach(z=>{
-        if(typeof z.body!=="boolean") z.body=false;
-        if(z.baseHp!==100 && z.baseHp!==110) z.baseHp=110;
-      });
-      return saved;
-    }
-  }catch(e){}
-  return defaultState();
-}
-function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-
-function maxHp(z){
-  let hp = z.cyber ? 140 : z.baseHp;
-  if(z.awakened) hp += 30;
-  if(z.light) hp += 30;
-  if(z.body) hp += 40;
-  return hp;
-}
-function remainingHp(z){ return Math.max(0, maxHp(z)-z.damage); }
-function equipText(z){
-  const a=[];
-  if(z.cyber) a.push("サイバネ");
-  if(z.light) a.push("ライトシールド");
-  if(z.body) a.push("ボディーアーマー");
-  return a.length ? a.join(" + ") : "装備なし";
-}
-
-function zoneHtml(z,i){
-  const rem=remainingHp(z), max=maxHp(z), down=rem<=0;
-  return `
-    <article class="zone ${z.awakened ? 'awakened-bg' : ''} ${down ? 'down-bg' : ''}" data-zone="${i}">
-      <div class="zone-inner">
-        <div class="zone-header">
-          <button class="icon-btn awake ${z.awakened?'active':''}" data-action="awake" aria-label="覚醒切替">
-            <span class="icon"></span><span class="label">覚醒</span>
-          </button>
-          <button class="equip equip-top ${(z.cyber||z.light||z.body)?'active':''}" data-action="armor" aria-label="装備設定">
-            ${equipText(z)}
-          </button>
-        </div>
-
-        <div class="damage-area">
-          <button class="damage-hit" data-action="minus" aria-label="ダメージを10減らす">−</button>
-          <div class="damage-center">
-            <div class="damage">${z.damage}</div>
-            <div class="damage-label">ダメージ</div>
-          </div>
-          <button class="damage-hit" data-action="plus" aria-label="ダメージを10増やす">＋</button>
-        </div>
-
-        <div class="zone-footer">
-          <button class="life-wrap" data-action="basehp" style="border:0;background:transparent;text-align:left;padding:0;cursor:pointer;width:100%" aria-label="基礎HPを110と100で切替">
-            <div class="life-label">残りライフ</div>
-            <div class="life ${down?'down':''}">${down ? 'DOWN' : `${rem} / ${max}`}</div>
-          </button>
-        </div>
-      </div>
-    </article>`;
-}
-
-function clampNumber(v,min,max){ return Math.min(max,Math.max(min,v)); }
-
-function applyTextSizes(){
-  const portraitBoard = window.matchMedia("(orientation: portrait)").matches;
-  const h = portraitBoard ? window.innerWidth : window.innerHeight;
-  const isShortLandscape = portraitBoard
-    ? window.innerWidth <= 500
-    : window.matchMedia("(orientation: landscape) and (max-height: 500px)").matches;
-
-  // 100% baseline sizes. Percentage is applied AFTER clamping, so values below
-  // 80% continue to shrink instead of getting stuck at clamp()'s minimum.
-  const damageBase = isShortLandscape
-    ? clampNumber(h * 0.12, 40, 70)
-    : clampNumber(h * 0.09, 44, 108);
-
-  const lifeBase = isShortLandscape
-    ? clampNumber(h * 0.085, 28, 52)
-    : clampNumber(h * 0.067, 32, 80);
-
-  document.documentElement.style.setProperty("--damage-font-px", (damageBase * state.damageSize / 100) + "px");
-  document.documentElement.style.setProperty("--life-font-px", (lifeBase * state.lifeSize / 100) + "px");
-}
-
-function render(){
-  applyTextSizes();
-  const damageSlider=document.getElementById("damageSize");
-  const lifeSlider=document.getElementById("lifeSize");
-  if(damageSlider){
-    damageSlider.value=state.damageSize;
-    document.getElementById("damageSizeValue").textContent=state.damageSize+"%";
-  }
-  if(lifeSlider){
-    lifeSlider.value=state.lifeSize;
-    document.getElementById("lifeSizeValue").textContent=state.lifeSize+"%";
-  }
-  document.getElementById("topRow").innerHTML = state.zones.slice(0,4).map((z,i)=>zoneHtml(z,i)).join("");
-  document.getElementById("bottomRow").innerHTML = state.zones.slice(4).map((z,i)=>zoneHtml(z,i+4)).join("");
-  document.getElementById("topRow").classList.toggle("flip", state.flipTop);
-  document.getElementById("flipBtn").firstChild.textContent = `上半分 反転：${state.flipTop?'ON':'OFF'}`;
-  saveState();
-}
-render();
-
-document.getElementById("app").addEventListener("click", e=>{
-  const btn=e.target.closest("[data-action]");
-  if(!btn) return;
-  const zoneEl=btn.closest(".zone");
-  const i=Number(zoneEl.dataset.zone);
-  const z=state.zones[i];
-  const action=btn.dataset.action;
-
-  if(action==="plus") z.damage += 10;
-  if(action==="minus") z.damage = Math.max(0,z.damage-10);
-  if(action==="awake") z.awakened = !z.awakened;
-  if(action==="basehp") z.baseHp = z.baseHp===110 ? 100 : 110;
-  if(action==="armor"){ openArmor(i,btn); return; }
-  render();
-});
-
-function openArmor(i,anchor){
-  armorZone=i;
-  const z=state.zones[i];
-  cyberChk.checked=z.cyber;
-  lightChk.checked=z.light;
-  bodyChk.checked=z.body;
-  const r=anchor.getBoundingClientRect();
-  const pop=document.getElementById("armorPop");
-  pop.classList.add("show");
-  const w=240,h=205;
-  pop.style.left=Math.min(window.innerWidth-w-8,Math.max(8,r.left))+"px";
-  pop.style.top=Math.min(window.innerHeight-h-8,Math.max(8,r.bottom+6))+"px";
-}
-function applyArmor(){
-  if(armorZone===null) return;
-  state.zones[armorZone].cyber=cyberChk.checked;
-  state.zones[armorZone].light=lightChk.checked;
-  state.zones[armorZone].body=bodyChk.checked;
-  render();
-}
-cyberChk.addEventListener("change",applyArmor);
-lightChk.addEventListener("change",applyArmor);
-bodyChk.addEventListener("change",applyArmor);
-armorClose.addEventListener("click",()=>armorPop.classList.remove("show"));
-document.addEventListener("pointerdown",e=>{
-  if(!e.target.closest("#armorPop") && !e.target.closest('[data-action="armor"]')) armorPop.classList.remove("show");
-});
-
-const overlay=document.getElementById("menuOverlay");
-const confirmBox=document.getElementById("resetConfirm");
-let holdTimer=null, startX=0, startY=0;
-
-document.getElementById("app").addEventListener("contextmenu", e=>{
-  e.preventDefault();
-});
-
-document.getElementById("app").addEventListener("selectstart", e=>{
-  e.preventDefault();
-});
-
-document.getElementById("app").addEventListener("pointerdown", e=>{
-  if(e.target.closest("button")) return;
-  startX=e.clientX; startY=e.clientY;
-  holdTimer=setTimeout(()=>{
-    navigator.vibrate?.(30);
-    document.body.classList.add("menu-open");
-    overlay.classList.add("show");
-  },650);
-});
-document.getElementById("app").addEventListener("pointermove", e=>{
-  if(Math.hypot(e.clientX-startX,e.clientY-startY)>12){
-    clearTimeout(holdTimer);holdTimer=null;
-  }
-});
-["pointerup","pointercancel","pointerleave"].forEach(ev=>{
-  document.getElementById("app").addEventListener(ev,()=>{clearTimeout(holdTimer);holdTimer=null;});
-});
-
-nextBtn.addEventListener("click",()=>{
-  state.zones.forEach(z=>z.damage=0);
-  overlay.classList.remove("show");
-  document.body.classList.remove("menu-open");
-  render();
-});
-flipBtn.addEventListener("click",()=>{
-  state.flipTop=!state.flipTop;
-  render();
-});
-resetBtn.addEventListener("click",()=>confirmBox.classList.add("show"));
-resetNo.addEventListener("click",()=>confirmBox.classList.remove("show"));
-resetYes.addEventListener("click",()=>{
-  const flip=state.flipTop;
-  const damageSize=state.damageSize;
-  const lifeSize=state.lifeSize;
-  state=defaultState();
-  state.flipTop=flip;
-  state.damageSize=damageSize;
-  state.lifeSize=lifeSize;
-  confirmBox.classList.remove("show");
-  overlay.classList.remove("show");
-  document.body.classList.remove("menu-open");
-  render();
-});
-const optionsPanel=document.getElementById("optionsPanel");
-const damageSize=document.getElementById("damageSize");
-const lifeSize=document.getElementById("lifeSize");
-
-optionsBtn.addEventListener("click",()=>{
-  resetConfirm.classList.remove("show");
-  optionsPanel.classList.toggle("show");
-});
-optionsCloseBtn.addEventListener("click",()=>optionsPanel.classList.remove("show"));
-
-function updateTextSizes(){
-  state.damageSize=Number(damageSize.value);
-  state.lifeSize=Number(lifeSize.value);
-  applyTextSizes();
-  damageSizeValue.textContent=state.damageSize+"%";
-  lifeSizeValue.textContent=state.lifeSize+"%";
-  saveState();
-}
-damageSize.addEventListener("input",updateTextSizes);
-lifeSize.addEventListener("input",updateTextSizes);
-
-window.addEventListener("resize", applyTextSizes);
-window.addEventListener("orientationchange", ()=>setTimeout(applyTextSizes,100));
-
-sizeDefaultBtn.addEventListener("click",()=>{
-  damageSize.value=100;
-  lifeSize.value=100;
-  updateTextSizes();
-});
-
-closeBtn.addEventListener("click",()=>{
-  confirmBox.classList.remove("show");
-  optionsPanel.classList.remove("show");
-  overlay.classList.remove("show");
-  document.body.classList.remove("menu-open");
-});
-overlay.addEventListener("click",e=>{
-  if(e.target===overlay){
-    confirmBox.classList.remove("show");
-    optionsPanel.classList.remove("show");
-    overlay.classList.remove("show");
-    document.body.classList.remove("menu-open");
-  }
-});
-</script>
+<script src="js/config.js"></script>
+<script src="js/state.js"></script>
+<script src="js/game-rules.js"></script>
+<script src="js/background-storage.js"></script>
+<script src="js/board-ui.js"></script>
+<script src="js/menu-ui.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
