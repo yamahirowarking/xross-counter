@@ -63,10 +63,50 @@
   }
 
   function fileToDataUrl(file){
+    return resizeImageFile(file);
+  }
+
+  function resizeImageFile(file,maxSide=1600,quality=0.88){
     return new Promise((resolve,reject)=>{
       const reader=new FileReader();
-      reader.onload=()=>resolve(reader.result);
       reader.onerror=()=>reject(reader.error);
+      reader.onload=()=>{
+        const img=new Image();
+        img.onerror=()=>reject(new Error("画像を読み込めませんでした"));
+        img.onload=()=>{
+          const srcW=img.naturalWidth || img.width;
+          const srcH=img.naturalHeight || img.height;
+          if(!srcW || !srcH){
+            reject(new Error("画像サイズを取得できませんでした"));
+            return;
+          }
+
+          const scale=Math.min(1,maxSide/Math.max(srcW,srcH));
+          const width=Math.max(1,Math.round(srcW*scale));
+          const height=Math.max(1,Math.round(srcH*scale));
+
+          const canvas=document.createElement("canvas");
+          canvas.width=width;
+          canvas.height=height;
+
+          const ctx=canvas.getContext("2d",{alpha:false});
+          ctx.imageSmoothingEnabled=true;
+          ctx.imageSmoothingQuality="high";
+          ctx.fillStyle="#ffffff";
+          ctx.fillRect(0,0,width,height);
+          ctx.drawImage(img,0,0,width,height);
+
+          let output;
+          try{
+            output=canvas.toDataURL("image/jpeg",quality);
+          }catch(error){
+            reject(error);
+            return;
+          }
+          resolve(output);
+        };
+        img.src=reader.result;
+      };
       reader.readAsDataURL(file);
     });
   }
@@ -88,6 +128,6 @@
   }
 
   CrossCounter.BackgroundStorage = {
-    loadAll,getCache,setCacheItem,removeCacheItem,fileToDataUrl,importPayload,exportPayload
+    loadAll,getCache,setCacheItem,removeCacheItem,fileToDataUrl,resizeImageFile,importPayload,exportPayload
   };
 })();

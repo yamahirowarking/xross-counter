@@ -23,20 +23,19 @@
     document.documentElement.style.setProperty("--damage-font-px",`${damageBase * state.damageSize / 100}px`);
     document.documentElement.style.setProperty("--life-font-px",`${lifeBase * state.lifeSize / 100}px`);
   }
-
-  function backgroundStyle(index,state){
-    const image = CrossCounter.BackgroundStorage.getCache()[index];
-    const safeImage = image ? `url("${String(image).replace(/"/g,'%22')}")` : "none";
-    return `--zone-bg:${safeImage};--bg-opacity:${state.bgOpacity/100}`;
-  }
-
   function zoneHtml(zone,index,state){
     const remaining=Rules.remainingHp(zone);
     const maximum=Rules.maxHp(zone);
     const down=Rules.isDown(zone);
     return `
       <article class="zone ${zone.awakened?'awakened-bg':''} ${down?'down-bg':''}"
-               data-zone="${index}" style='${backgroundStyle(index,state)}'>
+               data-zone="${index}">
+        <div class="zone-bg-layer" style="opacity:${state.bgOpacity/100}">
+          ${CrossCounter.BackgroundStorage.getCache()[index]
+            ? `<img src="${CrossCounter.BackgroundStorage.getCache()[index]}" alt="">`
+            : ""}
+        </div>
+        <div class="zone-state-layer"></div>
         <div class="zone-inner">
           <div class="zone-header">
             <button class="icon-btn awake ${zone.awakened?'active':''}" data-action="awake" aria-label="覚醒切替">

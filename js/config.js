@@ -1,6 +1,6 @@
 window.CrossCounter = window.CrossCounter || {};
 CrossCounter.CONFIG = Object.freeze({
-  version: "5.1",
+  version: "5.2.1",
   stateStorageKey: "crossstars-life-counter-v1",
   backgroundDbName: "crossstars-local-backgrounds-v1",
   backgroundStore: "images",
